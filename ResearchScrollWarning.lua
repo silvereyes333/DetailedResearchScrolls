@@ -1,7 +1,7 @@
 ResearchScrollWarning = {
     name = "ResearchScrollWarning",
     title = "Research Scroll Warning",
-    version = "1.0.0",
+    version = "1.0.1",
     author = "|c99CCEFsilvereyes|r",
 }
 local self               = ResearchScrollWarning
@@ -129,6 +129,7 @@ function self.GetScrollDataForTooltip(itemLink)
     
     for _, craftSkill in ipairs(scrollData.craftSkills) do
         local skillResearch = activeResearchLines[craftSkill]
+        if not skillResearch then return end
         if #skillResearch < 3 then
             return scrollData
         end
@@ -137,7 +138,8 @@ function self.GetScrollDataForTooltip(itemLink)
             local researchLineIndex = skillResearch[i].researchLineIndex
             local traitIndex        = skillResearch[i].traitIndex
             local seconds = GetRemainingResearchSeconds(craftSkill, researchLineIndex, traitIndex)
-            if not seconds then
+            local known = select(3, GetSmithingResearchLineTraitInfo(craftSkill, researchLineIndex, traitIndex))
+            if known or not seconds then
                 MarkResearchComplete(craftSkill, researchLineIndex, traitIndex)
             elseif seconds < scrollData.duration then
                 invalidResearchCount = invalidResearchCount + 1
@@ -212,11 +214,13 @@ end
 local function HookResearchEvents()
     EVENT_MANAGER:RegisterForEvent(self.name, EVENT_SMITHING_TRAIT_RESEARCH_COMPLETED, OnResearchCompleted)
     EVENT_MANAGER:RegisterForEvent(self.name, EVENT_SMITHING_TRAIT_RESEARCH_STARTED, OnResearchStarted)
+    EVENT_MANAGER:RegisterForEvent(self.name, EVENT_SMITHING_TRAIT_RESEARCH_TIMES_UPDATED, UpdateActiveResearchLines)
+    EVENT_MANAGER:RegisterForEvent(self.name, EVENT_SKILLS_FULL_UPDATE, UpdateActiveResearchLines)
+    EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_ACTIVATED, UpdateActiveResearchLines)
 end
 local function OnAddonLoaded(event, name)
     if name ~= self.name then return end
     EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_ADD_ON_LOADED)
-    UpdateActiveResearchLines()
     HookResearchEvents()
     HookToolTips()
 end
