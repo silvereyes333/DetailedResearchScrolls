@@ -1,7 +1,7 @@
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
-    version = "1.1.1",
+    version = "1.1.2",
     author = "|c99CCEFsilvereyes|r",
 }
 local addon               = DetailedResearchScrolls
@@ -111,6 +111,18 @@ local function GetItemIdFromLink(itemLink)
         return tonumber(itemId)
     end
 end
+local function LookupResearchScroll(itemLink)
+    if not itemLink then return end
+    local itemId
+    if type(itemLink) == "number" then
+        itemId = itemLink
+    else
+        itemId = GetItemIdFromLink(itemLink)
+        if not itemId then return end
+    end
+    local researchScroll = researchScrolls[itemId]
+    return researchScroll
+end
 local function MarkResearchActive(craftSkill, researchLineIndex, traitIndex)
     table.insert(activeResearchLines[craftSkill], { researchLineIndex = researchLineIndex, traitIndex = traitIndex })
 end
@@ -135,6 +147,12 @@ local function MarkResearchComplete(craftSkill, researchLineIndex, traitIndex)
     end
     table.insert(knownTraits[craftSkill][researchLineIndex], traitIndex )
 end
+function addon:GetIsResearchScroll(itemLink)
+    local researchScroll = LookupResearchScroll(itemLink)
+    if researchScroll then
+        return true
+    end
+end
 function addon:GetRemainingResearchSeconds(craftSkill, researchLineIndex, traitIndex)
     return select(2, GetSmithingResearchLineTraitTimes(craftSkill, researchLineIndex, traitIndex))
 end
@@ -152,10 +170,7 @@ function addon:GetKnownResearchLineCount(craftSkill)
     return knownCount
 end
 function addon:GetScrollResearchData(itemLink)
-    if not itemLink then return end
-    local itemId = GetItemIdFromLink(itemLink)
-    if not itemId then return end
-    local researchScroll = researchScrolls[itemId]
+    local researchScroll = LookupResearchScroll(itemLink)
     if not researchScroll then return end
     
     local scrollData = {

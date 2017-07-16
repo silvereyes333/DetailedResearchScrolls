@@ -1,13 +1,15 @@
 DetailedResearchScrolls:GetKnownResearchLineCount(craftSkill)
     returns integer
-    
+
+DetailedResearchScrolls:GetIsResearchScroll(itemLink or itemId)
+
 DetailedResearchScrolls:GetRemainingResearchSeconds(craftSkill, researchLineIndex, traitIndex)
     returns integer or nil
 
-DetailedResearchScrolls:GetResearchStatusLines(itemLink)
+DetailedResearchScrolls:GetResearchStatusLines(itemLink or itemId)
     returns array of strings
     
-DetailedResearchScrolls:GetScrollResearchData(itemLink)
+DetailedResearchScrolls:GetScrollResearchData(itemLink or itemId)
     returns a table with the following fields:
         craftSkills: array 
         duration: integer seconds the scroll will deduct from research timers
@@ -20,5 +22,5 @@ DetailedResearchScrolls:GetScrollResearchData(itemLink)
             secondsRemaining: number of seconds remaining on the timer for that trait
             longerThanScrollDuration: true if the time remaining is greater than the duration of the scroll
             
-DetailedResearchScrolls:GetWarningLine(itemLink)
+DetailedResearchScrolls:GetWarningLine(itemLink or itemId)
     returns string or nil
