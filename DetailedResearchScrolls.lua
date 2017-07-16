@@ -1,7 +1,7 @@
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
-    version = "1.1.0",
+    version = "1.1.1",
     author = "|c99CCEFsilvereyes|r",
 }
 local addon               = DetailedResearchScrolls
@@ -236,27 +236,24 @@ function addon:GetResearchStatusLines(itemLink)
     end
     local lines = { }
     for _, craftSkill in ipairs(scrollData.craftSkills) do
-        local craftSkillName = GetCraftingSkillName(craftSkill)
+        local craftSkillName = zo_strformat("<<1>>", GetCraftingSkillName(craftSkill))
         local knownCount = self:GetKnownResearchLineCount(craftSkill)
         local researchLineCount = GetNumSmithingResearchLines(craftSkill)
         local line = "      " .. COLOR_TITLE:Colorize(craftSkillName .. ":")
-        if researchLineCount - knownCount < 3 then
-            local allTraitsColor
-            if knownCount == researchLineCount then
-                allTraitsColor = COLOR_ERROR
-            else
-                allTraitsColor = COLOR_WARNING
-            end
+        
+        if knownCount == researchLineCount then
+            line = AppendResearchStatusLine(line, GetString(SI_SMITHING_RESEARCH_ALL_RESEARCHED), COLOR_ERROR)
+        elseif researchLineCount - knownCount < 3 then
             line = AppendResearchStatusLine(line, 
                                             zo_strformat(GetString(SI_DETAILEDRESEARCHSCROLLS_ALL_TRAITS),
                                                          knownCount,
                                                          researchLineCount), 
-                                            allTraitsColor)
+                                            COLOR_WARNING)
         end
         local traits = scrollData.activeResearch[craftSkill]
         if traits and #traits > 0 then
             for i, trait in ipairs(traits) do
-                local researchLineName = GetSmithingResearchLineInfo(craftSkill, trait.researchLineIndex)
+                local researchLineName = zo_strformat("<<1>>", GetSmithingResearchLineInfo(craftSkill, trait.researchLineIndex))
                 local formattedTimeRemaining = ZO_FormatTime(trait.secondsRemaining, TIME_FORMAT_STYLE_COLONS, TIME_FORMAT_PRECISION_TWELVE_HOUR)
                 local color
                 if trait.secondsRemaining < scrollData.duration then
