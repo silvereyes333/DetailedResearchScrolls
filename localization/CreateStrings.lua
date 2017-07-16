@@ -1,4 +1,4 @@
-for stringId, value in pairs(RESEARCHSCROLLWARNING_STRINGS) do
+for stringId, value in pairs(DETAILEDRESEARCHSCROLLS_STRINGS) do
     ZO_CreateStringId(stringId, value)
 end
-RESEARCHSCROLLWARNING_STRINGS = nil
+DETAILEDRESEARCHSCROLLS_STRINGS = nil
