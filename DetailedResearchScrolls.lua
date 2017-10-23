@@ -1,7 +1,7 @@
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
-    version = "1.1.2",
+    version = "1.2.0",
     author = "|c99CCEFsilvereyes|r",
 }
 local addon               = DetailedResearchScrolls
@@ -18,12 +18,6 @@ local ONE_DAY            = 86400
 local TWO_DAYS           = 2 * ONE_DAY
 local SEVEN_DAYS         = 7 * ONE_DAY
 local FIFTEEN_DAYS       = 15 * ONE_DAY
-local GRAND_SCROLL_DURATION
-if GetAPIVersion() < 100020 then
-    GRAND_SCROLL_DURATION = TWO_DAYS
-else
-    GRAND_SCROLL_DURATION = FIFTEEN_DAYS
-end
 local researchScrolls    = {
     -- Crown Research Scroll, Blacksmithing, 1 Day
     [125450] = {
@@ -33,7 +27,7 @@ local researchScrolls    = {
     -- Crown Research Scroll, Blacksmithing, 2 Day
     [125462] = {
         ["craftSkills"] = CRAFT_SKILLS_SMITH,
-        ["duration"] = GRAND_SCROLL_DURATION,
+        ["duration"] = FIFTEEN_DAYS,
     },
     -- Crown Research Scroll, Blacksmithing, 7 Day
     [125463] = {
@@ -48,7 +42,7 @@ local researchScrolls    = {
     -- Crown Research Scroll, Clothing, 2 Day
     [125465] = {
         ["craftSkills"] = CRAFT_SKILLS_CLOTH,
-        ["duration"] = GRAND_SCROLL_DURATION,
+        ["duration"] = FIFTEEN_DAYS,
     },
     -- Crown Research Scroll, Clothing, 7 Day
     [125466] = {
@@ -63,7 +57,7 @@ local researchScrolls    = {
     -- Crown Research Scroll, Woodworking, 2 Day
     [125468] = {
         ["craftSkills"] = CRAFT_SKILLS_WOOD,
-        ["duration"] = GRAND_SCROLL_DURATION,
+        ["duration"] = FIFTEEN_DAYS,
     },
     -- Crown Research Scroll, Woodworking, 7 Day
     [125469] = {
@@ -78,7 +72,7 @@ local researchScrolls    = {
     -- Crown Research Scroll, All, 2 Day
     [125471] = {
         ["craftSkills"] = CRAFT_SKILLS_ALL,
-        ["duration"] = GRAND_SCROLL_DURATION,
+        ["duration"] = FIFTEEN_DAYS,
     },
     -- Crown Research Scroll, All, 7 Day
     [125472] = {
