@@ -1,7 +1,7 @@
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
-    version = "1.2.0",
+    version = "1.3.0",
     author = "|c99CCEFsilvereyes|r",
 }
 local addon               = DetailedResearchScrolls
@@ -92,6 +92,11 @@ local researchScrolls    = {
     -- Research Scroll, Woodworking, 1 Day
     [125475] = {
         ["craftSkills"] = CRAFT_SKILLS_WOOD,
+        ["duration"] = ONE_DAY,
+    },
+    -- Character BOP Crown Research Scroll, All, 1 Day
+    [135124] = {
+        ["craftSkills"] = CRAFT_SKILLS_ALL,
         ["duration"] = ONE_DAY,
     },
 }
