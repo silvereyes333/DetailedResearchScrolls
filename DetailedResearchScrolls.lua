@@ -1,24 +1,31 @@
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
-    version = "1.3.0",
+    version = "1.4.0",
     author = "|c99CCEFsilvereyes|r",
 }
-local addon               = DetailedResearchScrolls
-local CRAFT_SKILLS_ALL   = { CRAFTING_TYPE_BLACKSMITHING, CRAFTING_TYPE_CLOTHIER, CRAFTING_TYPE_WOODWORKING }
-local CRAFT_SKILLS_SMITH = { CRAFTING_TYPE_BLACKSMITHING }
-local CRAFT_SKILLS_CLOTH = { CRAFTING_TYPE_CLOTHIER }
-local CRAFT_SKILLS_WOOD  = { CRAFTING_TYPE_WOODWORKING }
-local COLOR_ERROR        = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_FAILED))
-local COLOR_WARNING      = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_CAST_BAR_START, CAST_BAR_DEFAULT))
-local COLOR_TOOLTIP      = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_NORMAL))
-local COLOR_TITLE        = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_HIGHLIGHT))
-local COLOR_VALID        = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SUCCEEDED))
-local ONE_DAY            = 86400
-local TWO_DAYS           = 2 * ONE_DAY
-local SEVEN_DAYS         = 7 * ONE_DAY
-local FIFTEEN_DAYS       = 15 * ONE_DAY
-local researchScrolls    = {
+local addon                 = DetailedResearchScrolls
+local CRAFT_SKILLS_ALL     = { CRAFTING_TYPE_BLACKSMITHING, CRAFTING_TYPE_CLOTHIER, CRAFTING_TYPE_WOODWORKING, CRAFTING_TYPE_JEWELRYCRAFTING }
+local CRAFT_SKILLS_SMITH   = { CRAFTING_TYPE_BLACKSMITHING }
+local CRAFT_SKILLS_CLOTH   = { CRAFTING_TYPE_CLOTHIER }
+local CRAFT_SKILLS_WOOD    = { CRAFTING_TYPE_WOODWORKING }
+local CRAFT_SKILLS_JEWELRY = { CRAFTING_TYPE_JEWELRYCRAFTING or -1 }
+local COLOR_ERROR          = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_FAILED))
+local COLOR_WARNING        = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_CAST_BAR_START, CAST_BAR_DEFAULT))
+local COLOR_TOOLTIP        = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_NORMAL))
+local COLOR_TITLE          = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_HIGHLIGHT))
+local COLOR_VALID          = ZO_ColorDef:New(GetInterfaceColor(INTERFACE_COLOR_TYPE_TEXT_COLORS, INTERFACE_TEXT_COLOR_SUCCEEDED))
+local ONE_DAY              = 86400
+local TWO_DAYS             = 2 * ONE_DAY
+local SEVEN_DAYS           = 7 * ONE_DAY
+local FIFTEEN_DAYS         = 15 * ONE_DAY
+local CRAFTSKILL_SLOT_COUNTS = {
+    [CRAFTING_TYPE_BLACKSMITHING]   = 3, 
+    [CRAFTING_TYPE_CLOTHIER]        = 3,
+    [CRAFTING_TYPE_WOODWORKING]     = 3,
+    [CRAFTING_TYPE_JEWELRYCRAFTING or -1] = 1,
+}
+local researchScrolls      = {
     -- Crown Research Scroll, Blacksmithing, 1 Day
     [125450] = {
         ["craftSkills"] = CRAFT_SKILLS_SMITH,
@@ -99,6 +106,26 @@ local researchScrolls    = {
         ["craftSkills"] = CRAFT_SKILLS_ALL,
         ["duration"] = ONE_DAY,
     },
+    -- Research Scroll, Jewelry Crafting, 1 Day
+    [138814] = {
+        ["craftSkills"] = CRAFT_SKILLS_JEWELRY,
+        ["duration"] = ONE_DAY,
+    },
+    -- Crown Research Scroll, Jewelry Crafting, 1 Day
+    [139056] = {
+        ["craftSkills"] = CRAFT_SKILLS_JEWELRY,
+        ["duration"] = ONE_DAY,
+    },
+    -- Crown Research Scroll, Jewelry Crafting, 7 Day
+    [139057] = {
+        ["craftSkills"] = CRAFT_SKILLS_JEWELRY,
+        ["duration"] = SEVEN_DAYS,
+    },
+    -- Crown Research Scroll, Jewelry Crafting, 15 Day
+    [139058] = {
+        ["craftSkills"] = CRAFT_SKILLS_JEWELRY,
+        ["duration"] = FIFTEEN_DAYS,
+    },
 }
 local activeResearchLines = { }
 local knownTraits = { }
@@ -172,10 +199,22 @@ function addon:GetScrollResearchData(itemLink)
     local researchScroll = LookupResearchScroll(itemLink)
     if not researchScroll then return end
     
+    local requiredResearchCount
+    local craftSkillCount = #researchScroll.craftSkills
+    if craftSkillCount == 4 then
+        requiredResearchCount = 10
+    elseif craftSkillCount == 3 then
+        requiredResearchCount = 9
+    elseif researchScroll.craftSkills == CRAFT_SKILLS_JEWELRY then
+        requiredResearchCount = 1
+    else
+        requiredResearchCount = 3
+    end
+    
     local scrollData = {
         ["craftSkills"]           = researchScroll.craftSkills,
         ["duration"]              = researchScroll.duration,
-        ["requiredResearchCount"] = 3 * #researchScroll.craftSkills,
+        ["requiredResearchCount"] = requiredResearchCount,
         ["activeResearchCount"]   = 0,
         ["warningResearchCount"]  = 0,
         ["activeResearch"]        = { },
@@ -257,7 +296,7 @@ function addon:GetResearchStatusLines(itemLink)
         
         if knownCount == researchLineCount then
             line = AppendResearchStatusLine(line, GetString(SI_SMITHING_RESEARCH_ALL_RESEARCHED), COLOR_ERROR)
-        elseif researchLineCount - knownCount < 3 then
+        elseif researchLineCount - knownCount < CRAFTSKILL_SLOT_COUNTS[craftSkill] then
             line = AppendResearchStatusLine(line, 
                                             zo_strformat(GetString(SI_DETAILEDRESEARCHSCROLLS_ALL_TRAITS),
                                                          knownCount,
@@ -277,10 +316,10 @@ function addon:GetResearchStatusLines(itemLink)
                 end
                 line = AppendResearchStatusLine(line, researchLineName .. ": ", COLOR_TOOLTIP) .. color:Colorize(formattedTimeRemaining)
             end
-            for researchSlot=#traits + 1, 3 do
+            for researchSlot=#traits + 1, CRAFTSKILL_SLOT_COUNTS[craftSkill] do
                 line = AppendResearchStatusLine(line, zo_strformat(GetString(SI_DETAILEDRESEARCHSCROLLS_RESEARCH_SLOT_UNUSED), researchSlot), COLOR_ERROR)
             end
-        elseif researchLineCount - knownCount >= 3 then
+        elseif researchLineCount - knownCount >= CRAFTSKILL_SLOT_COUNTS[craftSkill] then
             line = AppendResearchStatusLine(line, GetString(SI_DETAILEDRESEARCHSCROLLS_NO_RESEARCH), COLOR_ERROR)
             
         end
