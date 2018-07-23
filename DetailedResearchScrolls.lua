@@ -1,7 +1,7 @@
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
-    version = "1.4.0",
+    version = "1.5.0",
     author = "|c99CCEFsilvereyes|r",
 }
 local addon                 = DetailedResearchScrolls
@@ -23,7 +23,7 @@ local CRAFTSKILL_SLOT_COUNTS = {
     [CRAFTING_TYPE_BLACKSMITHING]   = 3, 
     [CRAFTING_TYPE_CLOTHIER]        = 3,
     [CRAFTING_TYPE_WOODWORKING]     = 3,
-    [CRAFTING_TYPE_JEWELRYCRAFTING or -1] = 1,
+    [CRAFTING_TYPE_JEWELRYCRAFTING] = 1,
 }
 local researchScrolls      = {
     -- Crown Research Scroll, Blacksmithing, 1 Day
@@ -90,16 +90,19 @@ local researchScrolls      = {
     [125473] = {
         ["craftSkills"] = CRAFT_SKILLS_SMITH,
         ["duration"] = ONE_DAY,
+        ["hasCooldown"] = true,
     },
     -- Research Scroll, Clothing, 1 Day
     [125474] = {
         ["craftSkills"] = CRAFT_SKILLS_CLOTH,
         ["duration"] = ONE_DAY,
+        ["hasCooldown"] = true,
     },
     -- Research Scroll, Woodworking, 1 Day
     [125475] = {
         ["craftSkills"] = CRAFT_SKILLS_WOOD,
         ["duration"] = ONE_DAY,
+        ["hasCooldown"] = true,
     },
     -- Character BOP Crown Research Scroll, All, 1 Day
     [135124] = {
@@ -110,6 +113,7 @@ local researchScrolls      = {
     [138814] = {
         ["craftSkills"] = CRAFT_SKILLS_JEWELRY,
         ["duration"] = ONE_DAY,
+        ["hasCooldown"] = true,
     },
     -- Crown Research Scroll, Jewelry Crafting, 1 Day
     [139056] = {
@@ -428,5 +432,7 @@ local function OnAddonLoaded(event, name)
     HookResearchEvents()
     HookToolTips()
     SLASH_COMMANDS["/printresearchscrolls"] = addon.PrintAllScrolls
+    
+    addon:SetupSettings()
 end
 EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_ADD_ON_LOADED, OnAddonLoaded)

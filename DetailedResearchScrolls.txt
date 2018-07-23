@@ -1,13 +1,34 @@
-## Title: Research Scroll Warning
+## Title: Detailed Research Scrolls
 ## Author: |c99CCEFsilvereyes|r
-## Description: Adds a warning to research scroll tooltips if your current character does not have 3 active researches with over a day left.
-## Version: 1.4.0
-## APIVersion: 100022 100023
+## Description: Adds current research status info to research scroll tooltips. Also optionally notifies you when a scroll is ready to be used.
+## Version: 1.5.0
+## APIVersion: 100024 100025
+## SavedVariables: DetailedResearchScrolls_Account
+## SavedVariables: DetailedResearchScrolls_Character
 
-## This Add-On is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.
+## This Add-On is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. The Elder ScrollsÂ® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.
+
+lib\LibStub\LibStub.lua
+lib\LibCustomMenu\LibCustomMenu.lua
+lib\LibAddonMenu-2.0\LibAddonMenu-2.0.lua
+lib\LibAddonMenu-2.0\controls\panel.lua
+lib\LibAddonMenu-2.0\controls\submenu.lua
+lib\LibAddonMenu-2.0\controls\button.lua
+lib\LibAddonMenu-2.0\controls\checkbox.lua
+lib\LibAddonMenu-2.0\controls\colorpicker.lua
+lib\LibAddonMenu-2.0\controls\custom.lua
+lib\LibAddonMenu-2.0\controls\description.lua
+lib\LibAddonMenu-2.0\controls\dropdown.lua
+lib\LibAddonMenu-2.0\controls\editbox.lua
+lib\LibAddonMenu-2.0\controls\header.lua
+lib\LibAddonMenu-2.0\controls\slider.lua
+lib\LibAddonMenu-2.0\controls\texture.lua
+lib\LibAddonMenu-2.0\controls\iconpicker.lua
+lib\LibAddonMenu-2.0\controls\divider.lua
 
 localization\EN.lua
 localization\$(language).lua
 localization\CreateStrings.lua
 
 DetailedResearchScrolls.lua
+Settings.lua
