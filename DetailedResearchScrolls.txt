@@ -2,7 +2,7 @@
 ## Author: |c99CCEFsilvereyes|r
 ## Description: Adds current research status info to research scroll tooltips. Also optionally notifies you when a scroll is ready to be used.
 ## Version: 1.5.0
-## APIVersion: 100024 100025
+## APIVersion: 100024
 ## SavedVariables: DetailedResearchScrolls_Account
 ## SavedVariables: DetailedResearchScrolls_Character
 
@@ -25,6 +25,7 @@ lib\LibAddonMenu-2.0\controls\slider.lua
 lib\LibAddonMenu-2.0\controls\texture.lua
 lib\LibAddonMenu-2.0\controls\iconpicker.lua
 lib\LibAddonMenu-2.0\controls\divider.lua
+lib\LibAsync\LibAsync.lua
 
 localization\EN.lua
 localization\$(language).lua

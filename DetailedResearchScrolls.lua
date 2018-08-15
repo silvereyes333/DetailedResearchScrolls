@@ -3,8 +3,10 @@ DetailedResearchScrolls = {
     title = "Detailed Research Scrolls",
     version = "1.5.0",
     author = "|c99CCEFsilvereyes|r",
+    scrollInventory = {}
 }
-local addon                 = DetailedResearchScrolls
+local addon                = DetailedResearchScrolls
+local async                = LibStub("LibAsync")
 local CRAFT_SKILLS_ALL     = { CRAFTING_TYPE_BLACKSMITHING, CRAFTING_TYPE_CLOTHIER, CRAFTING_TYPE_WOODWORKING, CRAFTING_TYPE_JEWELRYCRAFTING }
 local CRAFT_SKILLS_SMITH   = { CRAFTING_TYPE_BLACKSMITHING }
 local CRAFT_SKILLS_CLOTH   = { CRAFTING_TYPE_CLOTHIER }
@@ -388,30 +390,81 @@ local function HookToolTips()
     --TODO: uncomment the following if ZOS every makes GetMarketProductItemLink() public instead of private
     --TooltipHook(ItemTooltip, "SetMarketProduct", GetMarketProductItemLink)
 end
-local function UpdateActiveResearchLines()
-    for _, craftSkill in ipairs(CRAFT_SKILLS_ALL) do
-        activeResearchLines[craftSkill] = { }
-        -- Total number of research lines for this craft skill
-        local researchLineCount = GetNumSmithingResearchLines(craftSkill)
-        
-        -- Loop through each research line (e.g. axe, mace, etc.)
-        for researchLineIndex = 1, researchLineCount do
-            
-            -- Get the total number of traits in the research line
-            local numTraits = select(3, GetSmithingResearchLineInfo(craftSkill, researchLineIndex))
-            
-            for traitIndex = 1, numTraits do
-                local secondsRemaining = addon:GetRemainingResearchSeconds(craftSkill, researchLineIndex, traitIndex)
-                local known = select(3, GetSmithingResearchLineTraitInfo(craftSkill, researchLineIndex, traitIndex))
-                if known then
-                    MarkResearchComplete(craftSkill, researchLineIndex, traitIndex)
-                elseif secondsRemaining then
-                    MarkResearchActive(craftSkill, researchLineIndex, traitIndex)
-                    break
-                end
+local function UpdateActiveResearchLinesForCraft(_, craftSkill)
+    activeResearchLines[craftSkill] = { }
+    -- Total number of research lines for this craft skill
+    local researchLineCount = GetNumSmithingResearchLines(craftSkill)
+    
+    -- Loop through each research line (e.g. axe, mace, etc.)
+	local task = async:GetCurrent()
+    task:For(1, researchLineCount):Do(
+    function(researchLineIndex)
+        -- Get the total number of traits in the research line
+        local numTraits = select(3, GetSmithingResearchLineInfo(craftSkill, researchLineIndex))
+        task:For(1, numTraits):Do(
+        function(traitIndex)
+            local secondsRemaining = addon:GetRemainingResearchSeconds(craftSkill, researchLineIndex, traitIndex)
+            local known = select(3, GetSmithingResearchLineTraitInfo(craftSkill, researchLineIndex, traitIndex))
+            if known then
+                MarkResearchComplete(craftSkill, researchLineIndex, traitIndex)
+            elseif secondsRemaining then
+                MarkResearchActive(craftSkill, researchLineIndex, traitIndex)
+                task:Cancel()
             end
+        end)
+    end)
+end
+local function UpdateActiveResearchLines()
+	local task = async:Create(addon.name .. ".UpdateActiveResearchLines")
+    task:For(ipairs(CRAFT_SKILLS_ALL))
+        :Do(UpdateActiveResearchLinesForCraft)
+end
+local function UpdateScrollInventoryForSlot(slotData, bagId, slotIndex)
+    if slotData and slotData.specializedItemType 
+       and slotData.specializedItemType == SPECIALIZED_ITEMTYPE_TROPHY_SCROLL
+    then
+        if not slotData.itemID then
+            slotData.itemID = GetItemId(bagId, slotIndex)
         end
+        if researchScrolls[slotData.itemID] then
+            addon.scrollInventory[bagId][slotIndex] = slotData
+            return
+        end
+        return
     end
+    addon.scrollInventory[bagId][slotIndex] = nil
+end
+local function UpdateScrollInventoryForBag(bagId)
+    if addon.scrollInventory[bagId] then
+        return
+    end
+    local bagCache = SHARED_INVENTORY:GetOrCreateBagCache(bagId)
+    if not bagCache or #bagCache == 0 then
+        return
+    end
+    addon.scrollInventory[bagId] = {}
+    local task = async:GetCurrent()
+    task:For(0,#bagCache):Do(
+    function(slotIndex)
+         local slotData = bagCache[slotIndex]
+         UpdateScrollInventoryForSlot(slotData, bagId, slotIndex)
+     end)
+end
+local function UpdateHouseBankInventory()
+    local task = async:GetCurrent() or async:Create(addon.name .. ".UpdateScrollInventory")
+    task:For(BAG_HOUSE_BANK_ONE, BAG_HOUSE_BANK_TEN)
+        :Do(UpdateScrollInventoryForBag)
+end
+local function UpdateScrollInventory()
+    local task = async:Create(addon.name .. ".UpdateScrollInventory")
+    task:Call(function() UpdateScrollInventoryForBag(BAG_BACKPACK) end)
+        :Then(function() UpdateScrollInventoryForBag(BAG_BANK) end)
+        :Then(function() UpdateScrollInventoryForBag(BAG_SUBSCRIBER_BANK) end)
+        :Then(UpdateHouseBankInventory)
+end
+local function OnPlayerActivated(eventCode)
+    UpdateActiveResearchLines()
+    UpdateScrollInventory()
 end
 local function OnResearchStarted(eventCode, craftSkill, researchLineIndex, traitIndex)
     MarkResearchActive(craftSkill, researchLineIndex, traitIndex)
@@ -419,17 +472,27 @@ end
 local function OnResearchCompleted(eventCode, craftSkill, researchLineIndex, traitIndex)
     MarkResearchComplete(craftSkill, researchLineIndex, traitIndex)
 end
-local function HookResearchEvents()
+local function OnInventorySingleSlotUpdate(eventCode, bagId, slotIndex, isNewItem, itemSoundCategory, inventoryUpdateReason, stackCountChange)
+    if not addon.scrollInventory[bagId] then
+        return
+    end
+    local slotData = SHARED_INVENTORY:GenerateSingleSlotData(bagId, slotIndex)
+    UpdateScrollInventoryForSlot(slotData, bagId, slotIndex)
+end
+local function HookEvents()
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_SMITHING_TRAIT_RESEARCH_COMPLETED, OnResearchCompleted)
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_SMITHING_TRAIT_RESEARCH_STARTED, OnResearchStarted)
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_SMITHING_TRAIT_RESEARCH_TIMES_UPDATED, UpdateActiveResearchLines)
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_SKILLS_FULL_UPDATE, UpdateActiveResearchLines)
-    EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_PLAYER_ACTIVATED, UpdateActiveResearchLines)
+    EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
+    EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_ZONE_CHANGED, UpdateHouseBankInventory)
+    EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE, OnInventorySingleSlotUpdate)
+    EVENT_MANAGER:AddFilterForEvent(addon.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE, REGISTER_FILTER_INVENTORY_UPDATE_REASON, INVENTORY_UPDATE_REASON_DEFAULT)
 end
 local function OnAddonLoaded(event, name)
     if name ~= addon.name then return end
     EVENT_MANAGER:UnregisterForEvent(addon.name, EVENT_ADD_ON_LOADED)
-    HookResearchEvents()
+    HookEvents()
     HookToolTips()
     SLASH_COMMANDS["/printresearchscrolls"] = addon.PrintAllScrolls
     
