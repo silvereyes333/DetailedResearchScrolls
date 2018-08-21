@@ -136,6 +136,7 @@ local researchScrolls      = {
 local activeResearchLines = { }
 local knownTraits = { }
 addon.knownTraits = knownTraits
+local updatingActiveResearchLines = { }
 
 local function GetItemIdFromLink(itemLink)
     local itemId = select(4, ZO_LinkHandler_ParseLink(itemLink))
@@ -156,9 +157,15 @@ local function LookupResearchScroll(itemLink)
     return researchScroll
 end
 local function MarkResearchActive(craftSkill, researchLineIndex, traitIndex)
+    if not activeResearchLines[craftSkill] or updatingActiveResearchLines[craftSkill] then
+        return
+    end
     table.insert(activeResearchLines[craftSkill], { researchLineIndex = researchLineIndex, traitIndex = traitIndex })
 end
 local function MarkResearchComplete(craftSkill, researchLineIndex, traitIndex)
+    if not activeResearchLines[craftSkill] or updatingActiveResearchLines[craftSkill] then
+        return
+    end
     for i=1,#activeResearchLines[craftSkill] do
         local activeResearch = activeResearchLines[craftSkill][i]
         if activeResearch.researchLineIndex == researchLineIndex and activeResearch.traitIndex == traitIndex then
@@ -391,6 +398,10 @@ local function HookToolTips()
     --TooltipHook(ItemTooltip, "SetMarketProduct", GetMarketProductItemLink)
 end
 local function UpdateActiveResearchLinesForCraft(_, craftSkill)
+    if updatingActiveResearchLines[craftSkill] then
+        return
+    end
+    updatingActiveResearchLines[craftSkill] = true
     activeResearchLines[craftSkill] = { }
     -- Total number of research lines for this craft skill
     local researchLineCount = GetNumSmithingResearchLines(craftSkill)
@@ -413,6 +424,7 @@ local function UpdateActiveResearchLinesForCraft(_, craftSkill)
             end
         end)
     end)
+    :Finally(function() updatingActiveResearchLines[craftSkill] = nil end)
 end
 local function UpdateActiveResearchLines()
 	local task = async:Create(addon.name .. ".UpdateActiveResearchLines")
