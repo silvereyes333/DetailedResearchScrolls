@@ -3,7 +3,6 @@ DetailedResearchScrolls = {
     title = "Detailed Research Scrolls",
     version = "1.5.0",
     author = "|c99CCEFsilvereyes|r",
-    scrollInventory = {}
 }
 local addon                = DetailedResearchScrolls
 local async                = LibStub("LibAsync")
@@ -431,7 +430,8 @@ local function UpdateActiveResearchLines()
     task:For(ipairs(CRAFT_SKILLS_ALL))
         :Do(UpdateActiveResearchLinesForCraft)
 end
-local function UpdateScrollInventoryForSlot(slotData, bagId, slotIndex)
+
+local function CheckSlotForResearchScroll(slotData, bagId, slotIndex)
     if slotData and slotData.specializedItemType 
        and slotData.specializedItemType == SPECIALIZED_ITEMTYPE_TROPHY_SCROLL
     then
@@ -439,44 +439,39 @@ local function UpdateScrollInventoryForSlot(slotData, bagId, slotIndex)
             slotData.itemID = GetItemId(bagId, slotIndex)
         end
         if researchScrolls[slotData.itemID] then
-            addon.scrollInventory[bagId][slotIndex] = slotData
-            return
+            return CALLBACK_MANAGER:FireCallbacks(addon..".ResearchScrollFound", slotData)
         end
         return
     end
-    addon.scrollInventory[bagId][slotIndex] = nil
 end
-local function UpdateScrollInventoryForBag(bagId)
-    if addon.scrollInventory[bagId] then
-        return
-    end
+local function ScanBagForResearchScrolls(bagId)
     local bagCache = SHARED_INVENTORY:GetOrCreateBagCache(bagId)
     if not bagCache or #bagCache == 0 then
         return
     end
-    addon.scrollInventory[bagId] = {}
     local task = async:GetCurrent()
     task:For(0,#bagCache):Do(
     function(slotIndex)
-         local slotData = bagCache[slotIndex]
-         UpdateScrollInventoryForSlot(slotData, bagId, slotIndex)
-     end)
+        local slotData = bagCache[slotIndex]
+        if CheckSlotForResearchScroll(slotData, bagId, slotIndex) then
+            task:Cancel()
+        end
+    end)
 end
 local function UpdateHouseBankInventory()
-    local task = async:GetCurrent() or async:Create(addon.name .. ".UpdateScrollInventory")
+    local task = async:GetCurrent() or async:Create(addon.name .. ".ScanAllBagsForResearchScrolls")
     task:For(BAG_HOUSE_BANK_ONE, BAG_HOUSE_BANK_TEN)
-        :Do(UpdateScrollInventoryForBag)
+        :Do(ScanBagForResearchScrolls)
 end
-local function UpdateScrollInventory()
-    local task = async:Create(addon.name .. ".UpdateScrollInventory")
-    task:Call(function() UpdateScrollInventoryForBag(BAG_BACKPACK) end)
-        :Then(function() UpdateScrollInventoryForBag(BAG_BANK) end)
-        :Then(function() UpdateScrollInventoryForBag(BAG_SUBSCRIBER_BANK) end)
+local function ScanAllBagsForResearchScrolls()
+    local task = async:Create(addon.name .. ".ScanAllBagsForResearchScrolls")
+    task:Call(function() ScanBagForResearchScrolls(BAG_BACKPACK) end)
+        :Then(function() ScanBagForResearchScrolls(BAG_BANK) end)
+        :Then(function() ScanBagForResearchScrolls(BAG_SUBSCRIBER_BANK) end)
         :Then(UpdateHouseBankInventory)
 end
 local function OnPlayerActivated(eventCode)
     UpdateActiveResearchLines()
-    UpdateScrollInventory()
 end
 local function OnResearchStarted(eventCode, craftSkill, researchLineIndex, traitIndex)
     MarkResearchActive(craftSkill, researchLineIndex, traitIndex)
@@ -484,12 +479,9 @@ end
 local function OnResearchCompleted(eventCode, craftSkill, researchLineIndex, traitIndex)
     MarkResearchComplete(craftSkill, researchLineIndex, traitIndex)
 end
-local function OnInventorySingleSlotUpdate(eventCode, bagId, slotIndex, isNewItem, itemSoundCategory, inventoryUpdateReason, stackCountChange)
-    if not addon.scrollInventory[bagId] then
-        return
-    end
+local function OnInventorySingleSlotUpdate(eventCode, bagId, slotIndex)
     local slotData = SHARED_INVENTORY:GenerateSingleSlotData(bagId, slotIndex)
-    UpdateScrollInventoryForSlot(slotData, bagId, slotIndex)
+    CheckSlotForResearchScroll(slotData, bagId, slotIndex)
 end
 local function HookEvents()
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_SMITHING_TRAIT_RESEARCH_COMPLETED, OnResearchCompleted)
@@ -498,8 +490,10 @@ local function HookEvents()
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_SKILLS_FULL_UPDATE, UpdateActiveResearchLines)
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_ZONE_CHANGED, UpdateHouseBankInventory)
+    
     EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE, OnInventorySingleSlotUpdate)
     EVENT_MANAGER:AddFilterForEvent(addon.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE, REGISTER_FILTER_INVENTORY_UPDATE_REASON, INVENTORY_UPDATE_REASON_DEFAULT)
+    EVENT_MANAGER:AddFilterForEvent(addon.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE, REGISTER_FILTER_IS_NEW_ITEM, true)
 end
 local function OnAddonLoaded(event, name)
     if name ~= addon.name then return end
