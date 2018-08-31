@@ -18,25 +18,21 @@ function addon:SetSetting(settingName, value)
 end
 
 local function tableCopyValues(source, dest)
-    d("tableCopyValues("..type(source)..","..type(dest)..")")
     for key, value in pairs(source) do
-        d(tostring(key)..":"..tostring(value))
         if type(value) == "table" then
             if type(dest[key]) ~= "table" then
-                d("dest["..tostring(key).."] = {}")
                 dest[key] = {}
             end
             tableCopyValues(value, dest[key])
         elseif key ~= "version" and type(value) ~= "function" then
-            d("dest["..tostring(key).."] = "..tostring(value))
             dest[key] = value
         end
     end
 end
 
 function addon:CopyAccountSettingsToCharacter()
-    tableCopyValues(getmetatable(DetailedResearchScrolls.accountSettings).__index,
-                    getmetatable(DetailedResearchScrolls.characterSettings).__index)
+    tableCopyValues(getmetatable(self.accountSettings).__index,
+                    getmetatable(self.characterSettings).__index)
 end
 
 function addon:SetupSettings()
@@ -74,7 +70,7 @@ function addon:SetupSettings()
     LAM2:RegisterAddonPanel(self.name.."Options", panelData)
 
     local optionsTable = {
-        -- Verbose
+        -- Account-wide settings
         {
             type    = "checkbox",
             name    = GetString(SI_DETAILEDRESEARCHSCROLLS_ACCOUNT_WIDE),

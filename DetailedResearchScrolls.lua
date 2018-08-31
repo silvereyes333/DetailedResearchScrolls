@@ -175,6 +175,17 @@ local researchScrolls      = {
         ["duration"] = FIFTEEN_DAYS,
     },
 }
+local scrollsWithCooldowns = {}
+for _, craftSkill in ipairs(CRAFT_SKILLS_ALL) do
+    scrollsWithCooldowns[craftSkill] = { }
+end
+for itemId, scrollData in pairs(researchScrolls) do
+    if scrollData.hasCooldown then
+        for _, craftSkill in ipairs(scrollData.craftSkills) do
+            table.insert(scrollsWithCooldowns[craftSkill], scrollData)
+        end
+    end
+end
 local activeResearchLines = { }
 local knownTraits = { }
 addon.knownTraits = knownTraits
