@@ -1,3 +1,46 @@
+--[[
+
+On login
+* check active research. 
+** if none are active for a given craft skill:
+*** if configured to warn, then if there are any research lines remaining to research, warn that research is not running
+** if any are active and have >= 1 day remaining - OR - explicitly configured to warn with
+   < 1 day, then check scroll cooldowns.
+*** if a cooldown is active, set a callback with a timer to activate when the 
+    cooldown is done.
+**** if a cooldown is not active, then:
+********* if configured to not check inventory, run the notification logic
+********* if configured to check inventory, async scan bags for a research scroll with hasCooldown matching the craft skill
+********** if a scroll is found, run the notification logic
+
+When research starts:
+* run the same logic as is run upon login
+
+When research ends:
+* if configured to warn, then if there are any research lines remaining to research, warn that research is not running
+
+When a scroll is used:
+* if a cooldown is active, set a callback with a timer to activate when the cooldown is done.
+* clear the is notified flag for the craft skill
+
+When notifications are toggled from off to on.
+* run the same logic as is run upon login
+
+When a notification is run:
+* If configured to only run once, check settings to see if the notification has been sent yet
+** If yes, then do nothing
+** If no, then continue
+* Save a flag on the character savedVars indicating that the notification has been sent for a craft skill
+* Play sounds and print messages as configured
+
+When a cooldown callback is done:
+* run the same logic as upon login
+
+When a research scroll is picked up:
+* check to see if a warning is pending inventory for the scroll's craft skill, and if so, warn
+]]--
+
+
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
