@@ -1,8 +1,8 @@
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
-    version = "1.4.2",
-    author = "|c99CCEFsilvereyes|r",
+    version = "1.4.3",
+    author = "silvereyes",
 }
 local addon                 = DetailedResearchScrolls
 local CRAFT_SKILLS_ALL     = { CRAFTING_TYPE_BLACKSMITHING, CRAFTING_TYPE_CLOTHIER, CRAFTING_TYPE_WOODWORKING, CRAFTING_TYPE_JEWELRYCRAFTING }
@@ -127,6 +127,7 @@ local researchScrolls      = {
         ["duration"] = FIFTEEN_DAYS,
     },
 }
+addon.researchScrolls = researchScrolls
 local activeResearchLines = { }
 local knownTraits = { }
 addon.knownTraits = knownTraits
