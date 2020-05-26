@@ -1,7 +1,7 @@
 DetailedResearchScrolls = {
     name = "DetailedResearchScrolls",
     title = "Detailed Research Scrolls",
-    version = "1.4.6",
+    version = "1.4.7",
     author = "silvereyes",
 }
 local addon                 = DetailedResearchScrolls
